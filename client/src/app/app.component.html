@@ -2,9 +2,5 @@
 
 <div class="container mt-6">
     <h2 class="text-3xl font-bold underline">Welcome to {{title}}</h2>
-    <ul>
-        @for (product of products; track product.id ) {
-            <li>{{product.name}} - {{product.description}}</li>
-        }
-    </ul>
+    <app-shop></app-shop>
 </div>
