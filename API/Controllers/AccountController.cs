@@ -4,11 +4,47 @@ using Core.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
     public class AccountController(SignInManager<AppUser> signInManager) : BaseApiController
     {
+        public AppUser? _user;
+
+        [HttpPost("mylogin")]
+        public async Task<ActionResult> Login([FromQuery] bool useCookies, [FromBody] LoginDto loginDto)
+        {
+            if(loginDto == null || string.IsNullOrEmpty(loginDto.Email) || string.IsNullOrEmpty(loginDto.Password))
+            {
+                return BadRequest("Email and Password are required.");
+            }
+
+            _user = await signInManager.UserManager.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+
+            if(_user == null){
+                return Unauthorized("Invalid email or password");
+            }else{
+                if(useCookies)
+                {
+                    var cookieOptions = new CookieOptions
+                    {
+                        Path = "/",
+                        HttpOnly = true,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddDays(1),
+                        Domain = "localhost"
+                    };
+
+                    Response.Cookies.Append("AuthCookie", "MyToken", cookieOptions);
+                    return Ok(new {Message = "Login successful, Cookie set"});
+                }else{
+                    return Ok(new { Message = "Login successful, but no cookie was set.", Token = "YourGeneratedToken" });
+                }
+            }
+        }
+
+
         [HttpPost("register")]
         public async Task<ActionResult> Register(RegisterDto registerDto)
         {
